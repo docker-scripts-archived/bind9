@@ -1,0 +1,253 @@
+#+TITLE:     How To Manage Your Own Domain Name Server
+#+AUTHOR:    Dashamir Hoxha
+#+EMAIL:     dashohoxha@gmail.com
+#+DATE:      2013-08-01
+##+DESCRIPTION:
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:nil \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
+#+OPTIONS:   TeX:nil LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc
+##+INFOJS_OPT: view:overview toc:t ltoc:t mouse:#aadddd buttons:0 path:org-info.js
+#+STYLE: <link rel="stylesheet" type="text/css" href="org.css" />
+
+
+In the old times (when men were real men), people used to manage their
+domains with their own domain name server. There is now a long time
+since things got easy and sweet. Nowadays you usually rely on the
+services provided by your ISP for managing your domain, which often
+means that you do everything from a nice web interfaces.
+
+However there are people (like me) that prefer to do things the old
+and sweaty way, which means that you install and manage your own name
+server. I will describe here how I did it for myself. Actually it is
+not so difficult, if you know some concepts about how DNS works and
+you have some basic command-line skills.
+
+* The Concepts
+
+  I have installed my NS on a cloud server (provided by Rackspace). It
+  is a *hidden*, *master*, *authoritative-only* DNS server.
+
+  *Hidden* means that it stays behind a firewall, not accessible from
+  the outside world. *Master* or *primary* means that it is a primary
+  source of information for the domains that it provides. There are
+  also *slave/secondary* DNS servers, which get the information of the
+  domains that they cover from other (master/primary) servers. If we
+  update the domain on a master server, the slaves will synchronise
+  with it automatically after a certain time.
+
+  *Authoritative-only* means that the server will just give answers
+  for the domains that it masters, and nothing else. DNS servers can
+  possibly do several things, for example give answers to DNS requests
+  from clients, both for the domains that they are responsible for and
+  for other domains. If they don't know the answer, they get it from
+  the Internet, fetch it to the client and then cache it for future
+  requests. However this server does not do any of these things. It
+  just answers for its own domains.
+
+  But there is a catch here: if the server stays behind the firewall,
+  hidden from the world and does not accept any requests from clients,
+  where should the clients send queries about our domain? The answer
+  is that they will query some *slave/secondary* DNS servers which are
+  synchronised with our server. Fortunately there are lots of free
+  secondary DNS services out there. I use puck.nether.net and
+  buddyns.com .
+
+  To get a better idea of the concepts discussed here, look at:
+   - http://www.inetdaemon.com/tutorials/internet/dns/configuration/hidden_master.shtml
+   - http://www.zytrax.com/books/dns/ch4/
+   - http://www.zytrax.com/books/dns/ch6/
+
+
+* Installation
+
+  Install *bind9*:
+  #+BEGIN_EXAMPLE
+  apt-get install bind9
+  #+END_EXAMPLE
+
+  After installation, edit ~/etc/default/bind9~ and add a *-4* to the
+  options:
+  #+BEGIN_EXAMPLE
+  # run resolvconf?
+  RESOLVCONF=no
+
+  # startup options for the server
+  OPTIONS="-u bind -4"
+  #+END_EXAMPLE
+
+  This will tell bind9 to run only on IPv4 interfaces (ignoring
+  IPv6). Not necessary, but will prevent some error messages on syslog
+  that might be confusing.
+
+
+* Setup Secondary Servers
+
+  Register your domain(s) on two or more secondary servers:
+   - https://www.buddyns.com
+   - https://puck.nether.net/
+   - http://networking.ringofsaturn.com/Unix/freednsservers.php
+
+  On your server, allow the secondary servers to access your DNS
+  server:
+  #+BEGIN_EXAMPLE
+  ufw allow from 173.244.206.26 to any port 53
+  ufw allow from 88.198.106.11 to any port 53
+  ufw allow from 204.42.254.5 to any port 53
+  #+END_EXAMPLE
+
+
+* Configuration Of The DNS Server
+
+  Configuration files of *bind9* are located at ~/etc/bind/~.
+
+  + Edit the file ~/etc/bind/named.conf~ and comment the line of default-zones:
+    #+BEGIN_EXAMPLE
+    include "/etc/bind/named.conf.options";
+    include "/etc/bind/named.conf.local";
+    #include "/etc/bind/named.conf.default-zones";
+    #+END_EXAMPLE
+
+  + Edit ~/etc/bind/named.conf.options~:
+    #+BEGIN_EXAMPLE
+    options {
+            directory "/var/cache/bind";
+            recursion no;
+            allow-transfer {
+                    173.244.206.26;     # a.transfer.buddyns.com
+                    88.198.106.11;      # b.transfer.buddyns.com
+                    204.42.254.5;       # puck.nether.net
+            };
+    };
+    #+END_EXAMPLE
+
+    Only the IPs of the secondary servers are allowed to get and
+    synchronise the information of our domains. The directive
+    "*recursion no;*" tells the server to not reply for any other
+    domains except for its own. Actually it is behind a firewall and
+    should not get any DNS queries, but just in case.
+
+  + Edit ~/etc/bind/named.conf.local~ and add the configuration of the zones:
+    #+BEGIN_EXAMPLE
+    zone "l10n.org.al" {
+            type master;
+            also-notify {
+                    173.244.206.26;     # a.transfer.buddyns.com
+                    88.198.106.11;      # b.transfer.buddyns.com
+                    204.42.254.5;       # puck.nether.net
+            };
+            file "/var/cache/bind/db.l10n.org.al";
+    };
+
+    zone "btranslator.org" {
+            type master;
+            also-notify {
+                    173.244.206.26;     # a.transfer.buddyns.com
+                    88.198.106.11;      # b.transfer.buddyns.com
+                    204.42.254.5;       # puck.nether.net
+            };
+            file "/var/cache/bind/db.btranslator.org";
+    };
+    #+END_EXAMPLE
+
+    Our server is master for both of these domains, and when they are
+    modified it will notify the secondary servers about it (so that
+    they can transfer and sync the data).
+
+
+* Configuration Of The Domains
+
+  The files that keep the configuration of the domain zones are placed
+  on ~/var/cache/bind/~.
+
+  + Create the file ~/var/cache/bind/db.l10n.org.al~ with a content like this:
+    #+BEGIN_EXAMPLE
+    ; l10n.org.al
+    $TTL    24h
+    $ORIGIN l10n.org.al.
+    @       1D      IN      SOA     ns1.l10n.org.al.        admin.l10n.org.al. (
+                                            2013070101 ; serial
+                                            3H ; refresh
+                                            15m ; retry
+                                            1w ; expire
+                                            2h ; minimum
+                                    )
+                    IN      NS              b.ns.buddyns.com.
+                    IN      NS              c.ns.buddyns.com.
+                    IN      NS              puck.nether.net.
+
+                    IN      MX      1       aspmx.l.google.com.
+                    IN      MX      5       alt1.aspmx.l.google.com.
+                    IN      MX      5       alt2.aspmx.l.google.com.
+                    IN      MX      10      aspmx2.googlemail.com.
+                    IN      MX      10      aspmx3.googlemail.com.
+
+                    IN      TXT             "v=spf1 include:_spf.google.com ~all"
+    google._domainkey       IN      TXT     "v=DKIM1; k=rsa; p=MIGfMA0GCSxGSIb3DQEBAQUBA4GNADCBiQ5BgQCWKzwJ1kui8IVQmTbphXvkETTJWbqOyDqbkppfBrcos1+gIixvM-MYSVUrawpzyaaxEPg3IT/Wq8MF3S58/cUtwv3Idv6IkQxIU6ub8/uEq900ILD9EuQX32jUk+pfpJtDoeA0vm1vhv1taIGr4W5ds2HXyQXX1qKcyShRAC2O/wIDAQAB"
+
+    ; server host definitions
+    ns1.l10n.org.al.        IN      A       198.101.226.171
+    @               IN      A               198.101.226.171
+    www             IN      A               198.101.226.171
+    mail            IN      CNAME           ghs.google.com.
+    #+END_EXAMPLE
+
+    Don't forget to change the serial number whenever this file is
+    modified, otherwise the changes may not be noticed and propagated
+    on the Internet. The other 'magic' numbers can be left as they
+    are.
+
+    You also see that only the secondary servers are listed as
+    nameservers for our domain. So, when clients have any questions
+    about our domain, they go and ask them, not our server (which is
+    behind a firewall and cannot be reached).
+
+    #+BEGIN_EXAMPLE
+    IN      NS              b.ns.buddyns.com.
+    IN      NS              c.ns.buddyns.com.
+    IN      NS              puck.nether.net.
+    #+END_EXAMPLE
+
+    Also, it happens that I use GoogleApps for the email and other
+    services (it offers up to 10 email accounts for free), and this is
+    reflected on the configuration of the domain.
+
+  + Very similar is the configuration of the other domain. Create the
+    file ~/var/cache/bind/db.btranslator.org~ with a content like this:
+    #+BEGIN_EXAMPLE
+    ; btranslator.org
+    $TTL    24h
+    $ORIGIN btranslator.org.
+    @       1D      IN      SOA     ns1.btranslator.org.    admin.btranslator.org. (
+                                            2013070101 ; serial
+                                            3H ; refresh
+                                            15m ; retry
+                                            1w ; expire
+                                            2h ; minimum
+                                    )
+                    IN      NS              b.ns.buddyns.com.
+                    IN      NS              c.ns.buddyns.com.
+                    IN      NS              puck.nether.net.
+
+                    IN      MX      1       aspmx.l.google.com.
+                    IN      MX      5       alt1.aspmx.l.google.com.
+                    IN      MX      5       alt2.aspmx.l.google.com.
+                    IN      MX      10      aspmx2.googlemail.com.
+                    IN      MX      10      aspmx3.googlemail.com.
+
+                    IN      TXT             "v=spf1 include:_spf.google.com ~all"
+    google._domainkey       IN      TXT     "v=DKIM1; k=rsa; p=MIGfMA0GCSxGSIb3DQEBAQUBA4GNADCBiQ5BgQCWKzwJ1kui8IVQmTbphXvkETTJWbqOyDqbkppfBrcos1+gIixvM-MYSVUrawpzyaaxEPg3IT/Wq8MF3S58/cUtwv3Idv6IkQxIU6ub8/uEq900ILD9EuQX32jUk+pfpJtDoeA0vm1vhv1taIGr4W5ds2HXyQXX1qKcyShRAC2O/wIDAQAB"
+
+    ; server host definitions
+    ns1.l10n.org.al.        IN      A       198.101.226.171
+    @               IN      A               198.101.226.171
+
+    ; point to the server any subdomain
+    *               IN      A               198.101.226.171
+
+    mail            IN      CNAME           ghs.google.com.
+    #+END_EXAMPLE
+
+
+Some other help pages about the configuration of bind9 on Ubuntu:
+ -  https://help.ubuntu.com/lts/serverguide/dns-configuration.html
+ -  http://wernerstrydom.com/2013/02/23/configuring-ubuntu-server-12-04-as-dns-server/

@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+lang="en" xml:lang="en">
+<head>
+<title>How To Manage Your Own Domain Name Server</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2013-08-01"/>
+<meta name="author" content="Dashamir Hoxha"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #add8e6; font-weight:normal }
+  .target { }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="org.css" />
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+
+<h1 class="title">How To Manage Your Own Domain Name Server</h1>
+
+
+<p>
+In the old times (when men were real men), people used to manage their
+domains with their own domain name server. There is now a long time
+since things got easy and sweet. Nowadays you usually rely on the
+services provided by your ISP for managing your domain, which often
+means that you do everything from a nice web interfaces.
+</p>
+<p>
+However there are people (like me) that prefer to do things the old
+and sweaty way, which means that you install and manage your own name
+server. I will describe here how I did it for myself. Actually it is
+not so difficult, if you know some concepts about how DNS works and
+you have some basic command-line skills.
+</p>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> The Concepts </h2>
+<div class="outline-text-2" id="text-1">
+
+
+<p>
+I have installed my NS on a cloud server (provided by Rackspace). It
+is a <b>hidden</b>, <b>master</b>, <b>authoritative-only</b> DNS server.
+</p>
+<p>
+<b>Hidden</b> means that it stays behind a firewall, not accessible from
+the outside world. <b>Master</b> or <b>primary</b> means that it is a primary
+source of information for the domains that it provides. There are
+also <b>slave/secondary</b> DNS servers, which get the information of the
+domains that they cover from other (master/primary) servers. If we
+update the domain on a master server, the slaves will synchronise
+with it automatically after a certain time.
+</p>
+<p>
+<b>Authoritative-only</b> means that the server will just give answers
+for the domains that it masters, and nothing else. DNS servers can
+possibly do several things, for example give answers to DNS requests
+from clients, both for the domains that they are responsible for and
+for other domains. If they don't know the answer, they get it from
+the Internet, fetch it to the client and then cache it for future
+requests. However this server does not do any of these things. It
+just answers for its own domains.
+</p>
+<p>
+But there is a catch here: if the server stays behind the firewall,
+hidden from the world and does not accept any requests from clients,
+where should the clients send queries about our domain? The answer
+is that they will query some <b>slave/secondary</b> DNS servers which are
+synchronised with our server. Fortunately there are lots of free
+secondary DNS services out there. I use puck.nether.net and
+buddyns.com .
+</p>
+<p>
+To get a better idea of the concepts discussed here, look at:
+</p><ul>
+<li>
+<a href="http://www.inetdaemon.com/tutorials/internet/dns/configuration/hidden_master.shtml">http://www.inetdaemon.com/tutorials/internet/dns/configuration/hidden\_master.shtml</a>
+</li>
+<li>
+<a href="http://www.zytrax.com/books/dns/ch4/">http://www.zytrax.com/books/dns/ch4/</a>
+</li>
+<li>
+<a href="http://www.zytrax.com/books/dns/ch6/">http://www.zytrax.com/books/dns/ch6/</a>
+
+
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Installation </h2>
+<div class="outline-text-2" id="text-2">
+
+
+<p>
+Install <b>bind9</b>:
+</p>
+
+
+<pre class="example">apt-get install bind9
+</pre>
+
+
+
+
+<p>
+After installation, edit <code>/etc/default/bind9</code> and add a <b>-4</b> to the
+options:
+</p>
+
+
+<pre class="example"># run resolvconf?
+RESOLVCONF=no
+
+# startup options for the server
+OPTIONS="-u bind -4"
+</pre>
+
+
+
+
+<p>
+This will tell bind9 to run only on IPv4 interfaces (ignoring
+IPv6). Not necessary, but will prevent some error messages on syslog
+that might be confusing.
+</p>
+
+</div>
+
+</div>
+
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> Setup Secondary Servers </h2>
+<div class="outline-text-2" id="text-3">
+
+
+<p>
+Register your domain(s) on two or more secondary servers:
+</p><ul>
+<li>
+<a href="https://www.buddyns.com">https://www.buddyns.com</a>
+</li>
+<li>
+<a href="https://puck.nether.net/">https://puck.nether.net/</a>
+</li>
+<li>
+<a href="http://networking.ringofsaturn.com/Unix/freednsservers.php">http://networking.ringofsaturn.com/Unix/freednsservers.php</a>
+
+</li>
+</ul>
+
+<p>On your server, allow the secondary servers to access your DNS
+server:
+</p>
+
+
+<pre class="example">ufw allow from 173.244.206.26 to any port 53
+ufw allow from 88.198.106.11 to any port 53
+ufw allow from 204.42.254.5 to any port 53
+</pre>
+
+
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> Configuration Of The DNS Server </h2>
+<div class="outline-text-2" id="text-4">
+
+
+<p>
+Configuration files of <b>bind9</b> are located at <code>/etc/bind/</code>.
+</p>
+<ul>
+<li>
+Edit the file <code>/etc/bind/named.conf</code> and comment the line of default-zones:
+
+
+
+<pre class="example">include "/etc/bind/named.conf.options";
+include "/etc/bind/named.conf.local";
+#include "/etc/bind/named.conf.default-zones";
+</pre>
+
+
+
+
+</li>
+<li>
+Edit <code>/etc/bind/named.conf.options</code>:
+
+
+
+<pre class="example">options {
+        directory "/var/cache/bind";
+        recursion no;
+        allow-transfer {
+                173.244.206.26;     # a.transfer.buddyns.com
+                88.198.106.11;      # b.transfer.buddyns.com
+                204.42.254.5;       # puck.nether.net
+        };
+};
+</pre>
+
+
+
+
+<p>
+Only the IPs of the secondary servers are allowed to get and
+synchronise the information of our domains. The directive
+"<b>recursion no;</b>" tells the server to not reply for any other
+domains except for its own. Actually it is behind a firewall and
+should not get any DNS queries, but just in case.
+</p>
+</li>
+<li>
+Edit <code>/etc/bind/named.conf.local</code> and add the configuration of the zones:
+
+
+
+<pre class="example">zone "l10n.org.al" {
+        type master;
+        also-notify {
+                173.244.206.26;     # a.transfer.buddyns.com
+                88.198.106.11;      # b.transfer.buddyns.com
+                204.42.254.5;       # puck.nether.net
+        };
+        file "/var/cache/bind/db.l10n.org.al";
+};
+
+zone "btranslator.org" {
+        type master;
+        also-notify {
+                173.244.206.26;     # a.transfer.buddyns.com
+                88.198.106.11;      # b.transfer.buddyns.com
+                204.42.254.5;       # puck.nether.net
+        };
+        file "/var/cache/bind/db.btranslator.org";
+};
+</pre>
+
+
+
+
+<p>
+Our server is master for both of these domains, and when they are
+modified it will notify the secondary servers about it (so that
+they can transfer and sync the data).
+</p>
+
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Configuration Of The Domains </h2>
+<div class="outline-text-2" id="text-5">
+
+
+<p>
+The files that keep the configuration of the domain zones are placed
+on <code>/var/cache/bind/</code>.
+</p>
+<ul>
+<li>
+Create the file <code>/var/cache/bind/db.l10n.org.al</code> with a content like this:
+
+
+
+<pre class="example">; l10n.org.al
+$TTL    24h
+$ORIGIN l10n.org.al.
+@       1D      IN      SOA     ns1.l10n.org.al.        admin.l10n.org.al. (
+                                        2013070101 ; serial
+                                        3H ; refresh
+                                        15m ; retry
+                                        1w ; expire
+                                        2h ; minimum
+                                )
+                IN      NS              b.ns.buddyns.com.
+                IN      NS              c.ns.buddyns.com.
+                IN      NS              puck.nether.net.
+
+                IN      MX      1       aspmx.l.google.com.
+                IN      MX      5       alt1.aspmx.l.google.com.
+                IN      MX      5       alt2.aspmx.l.google.com.
+                IN      MX      10      aspmx2.googlemail.com.
+                IN      MX      10      aspmx3.googlemail.com.
+
+                IN      TXT             "v=spf1 include:_spf.google.com ~all"
+google._domainkey       IN      TXT     "v=DKIM1; k=rsa; p=MIGfMA0GCSxGSIb3DQEBAQUBA4GNADCBiQ5BgQCWKzwJ1kui8IVQmTbphXvkETTJWbqOyDqbkppfBrcos1+gIixvM-MYSVUrawpzyaaxEPg3IT/Wq8MF3S58/cUtwv3Idv6IkQxIU6ub8/uEq900ILD9EuQX32jUk+pfpJtDoeA0vm1vhv1taIGr4W5ds2HXyQXX1qKcyShRAC2O/wIDAQAB"
+
+; server host definitions
+ns1.l10n.org.al.        IN      A       198.101.226.171
+@               IN      A               198.101.226.171
+www             IN      A               198.101.226.171
+mail            IN      CNAME           ghs.google.com.
+</pre>
+
+
+
+
+<p>
+Don't forget to change the serial number whenever this file is
+modified, otherwise the changes may not be noticed and propagated
+on the Internet. The other 'magic' numbers can be left as they
+are.
+</p>
+<p>
+You also see that only the secondary servers are listed as
+nameservers for our domain. So, when clients have any questions
+about our domain, they go and ask them, not our server (which is
+behind a firewall and cannot be reached).
+</p>
+
+
+
+<pre class="example">IN      NS              b.ns.buddyns.com.
+IN      NS              c.ns.buddyns.com.
+IN      NS              puck.nether.net.
+</pre>
+
+
+
+
+<p>
+Also, it happens that I use GoogleApps for the email and other
+services (it offers up to 10 email accounts for free), and this is
+reflected on the configuration of the domain.
+</p>
+</li>
+<li>
+Very similar is the configuration of the other domain. Create the
+file <code>/var/cache/bind/db.btranslator.org</code> with a content like this:
+
+
+
+<pre class="example">; btranslator.org
+$TTL    24h
+$ORIGIN btranslator.org.
+@       1D      IN      SOA     ns1.btranslator.org.    admin.btranslator.org. (
+                                        2013070101 ; serial
+                                        3H ; refresh
+                                        15m ; retry
+                                        1w ; expire
+                                        2h ; minimum
+                                )
+                IN      NS              b.ns.buddyns.com.
+                IN      NS              c.ns.buddyns.com.
+                IN      NS              puck.nether.net.
+
+                IN      MX      1       aspmx.l.google.com.
+                IN      MX      5       alt1.aspmx.l.google.com.
+                IN      MX      5       alt2.aspmx.l.google.com.
+                IN      MX      10      aspmx2.googlemail.com.
+                IN      MX      10      aspmx3.googlemail.com.
+
+                IN      TXT             "v=spf1 include:_spf.google.com ~all"
+google._domainkey       IN      TXT     "v=DKIM1; k=rsa; p=MIGfMA0GCSxGSIb3DQEBAQUBA4GNADCBiQ5BgQCWKzwJ1kui8IVQmTbphXvkETTJWbqOyDqbkppfBrcos1+gIixvM-MYSVUrawpzyaaxEPg3IT/Wq8MF3S58/cUtwv3Idv6IkQxIU6ub8/uEq900ILD9EuQX32jUk+pfpJtDoeA0vm1vhv1taIGr4W5ds2HXyQXX1qKcyShRAC2O/wIDAQAB"
+
+; server host definitions
+ns1.l10n.org.al.        IN      A       198.101.226.171
+@               IN      A               198.101.226.171
+
+; point to the server any subdomain
+*               IN      A               198.101.226.171
+
+mail            IN      CNAME           ghs.google.com.
+</pre>
+
+
+
+
+
+</li>
+</ul>
+
+<p>Some other help pages about the configuration of bind9 on Ubuntu:
+</p><ul>
+<li>
+ <a href="https://help.ubuntu.com/lts/serverguide/dns-configuration.html">https://help.ubuntu.com/lts/serverguide/dns-configuration.html</a>
+</li>
+<li>
+ <a href="http://wernerstrydom.com/2013/02/23/configuring-ubuntu-server-12-04-as-dns-server/">http://wernerstrydom.com/2013/02/23/configuring-ubuntu-server-12-04-as-dns-server/</a>
+</li>
+</ul>
+</div>
+</div>
+<div id="postamble">
+<p class="author"> Author: Dashamir Hoxha
+<a href="mailto:dashohoxha@gmail.com">&lt;dashohoxha@gmail.com&gt;</a>
+</p>
+<p class="date"> Date: 2013-08-01</p>
+<p class="creator">HTML generated by org-mode 6.33x in emacs 23</p>
+</div>
+</div>
+</body>
+</html>

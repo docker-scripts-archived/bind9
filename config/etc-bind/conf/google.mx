@@ -1,0 +1,5 @@
+  3600  IN  MX  3   aspmx.l.google.com.
+  3600  IN  MX  5   alt1.aspmx.l.google.com.
+  3600  IN  MX  5   alt2.aspmx.l.google.com.
+  3600  IN  MX  10  alt3.aspmx.l.google.com.
+  3600  IN  MX  10  alt4.aspmx.l.google.com.

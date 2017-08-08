@@ -1,0 +1,6 @@
+; server host definitions
+ns1  IN  A  127.0.0.1
+@    IN  A  127.0.0.1
+
+; point to the server any subdomain
+*    IN  A  127.0.0.1

@@ -1,0 +1,6 @@
+mail      IN  CNAME  ghs.googlehosted.com.
+drive     IN  CNAME  ghs.googlehosted.com.
+calendar  IN  CNAME  ghs.googlehosted.com.
+groups    IN  CNAME  ghs.googlehosted.com.
+sites     IN  CNAME  ghs.googlehosted.com.
+docs      IN  CNAME  ghs.googlehosted.com.

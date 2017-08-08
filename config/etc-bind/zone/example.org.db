@@ -1,0 +1,48 @@
+$TTL    24h
+$ORIGIN example.org.
+@  1D  IN  SOA  ns1  admin (
+    2014052701 ; serial
+    3H         ; refresh
+    15m        ; retry
+    1w         ; expire
+    2h         ; minimum
+)
+
+$INCLUDE conf/secondary.ns
+$INCLUDE conf/common-domains.a
+
+;;;;;;;;;; custom configuration that is different for ech domain  ;;;;;;;;;;
+
+; mailservers
+;  3600  IN  MX  1  mx1    ; or mx1.example.org.
+;  3600  IN  MX  2  mx2
+
+; redirect subdomains to other servers
+;test        IN  A  10.11.12.13
+
+; redirecting by CNAME (for example to github pages)
+;www         IN  CNAME  example1.github.io.
+;info        IN  CNAME  example2.github.io.
+
+
+;;;;;;;;;;  configuration related to google hosted domains ;;;;;;;;;;
+
+;$INCLUDE conf/google.mx
+;$INCLUDE conf/googlehosted
+
+; verify domain ownership by TXT
+;  IN  TXT  "google-site-verification=6ZDrCOHwyPhtoNjRH2bFZtgd7lCl1K5YcyPjCvofNp0"
+
+; verify domain ownership by CNAME
+; sfihmjnxm6fl  IN  CNAME  gv-dbfd7ykhfrk7em.dv.googlehosted.com.
+
+;  IN  TXT  "v=spf1 +a +mx include:_spf.google.com ~all"
+; dkim._domainkey 3600 TXT (
+;   "v=DKIM1; p="
+;   "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDB3Ci+QjSL8qV+5ITPYj7HlGoG"
+;   "NachrpwGby1tOofNbBmLsBWd+Firy20yx2E1JA1175QuO7/N/7eovhTnQbw3Dj+i"
+;   "X87glECSX9Ib7B2uEbJ1hSTXYFnCd9fy4cjvdaW+fTK2ROgpCBb4wsHEO3eS7CED"
+;   "A4QbnnocPXntCWtRkwIDAQAB")
+
+; google._domainkey  IN  TXT  "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWKzwJ1kui8IVQmTbphXvPETTJWbqOyDqbkppfBrcos1+gIixvMEMYSVUrawpzyaaxEPg3IT/Wq8MF3S58/cUtwv3Idv6IkQxIU6ub8BuEq900ILD9EuQX32jUk+pfpJtDoeA0vm1vhv1taIGr4W5ds2HXyQXX1qKcyShRAC2O/wIDAQAB"
+
