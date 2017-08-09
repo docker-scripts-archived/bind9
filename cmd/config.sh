@@ -7,11 +7,7 @@ _EOF
 }
 
 cmd_config() {
-    is_up || ds start && sleep 3
-
     ds runcfg set_prompt
     ds runcfg ssmtp
     ds runcfg bind9
-
-    ds restart
 }
