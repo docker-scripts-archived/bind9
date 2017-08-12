@@ -19,18 +19,12 @@ See also this: [docs/how-to-manage-your-own-name-server.org](https://github.com/
 
   - Create a directory for the container: `ds init bind9 @bind9`
 
-  - Fix the settings:
-    ```
-    cd /var/ds/bind9/
-    vim settings.sh
-    ds info
-    ```
+  - Fix the settings: `cd /var/ds/bind9/ ; vim settings.sh`
 
-  - Build image, create the container and configure it:
-    ```
-    ds build
-    ds create
-    ds config
-    ```
+  - Build image, create the container and configure it: `ds make`
 
 ## Usage
+
+    zone (add | rm | en | dis) <domain>
+        Manage domain zones.
+
