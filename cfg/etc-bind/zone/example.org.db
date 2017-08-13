@@ -1,7 +1,7 @@
 $TTL    24h
 $ORIGIN example.org.
 @  1D  IN  SOA  ns1  admin (
-    2014052701 ; serial
+    2017081201 ; serial
     3H         ; refresh
     15m        ; retry
     1w         ; expire
@@ -9,26 +9,19 @@ $ORIGIN example.org.
 )
 
 $INCLUDE conf/secondary.ns
-$INCLUDE conf/common-domains.a
 
-;;;;;;;;;; custom configuration that is different for ech domain  ;;;;;;;;;;
+ns1  IN  A  127.0.0.1
 
-; mailservers
-;  3600  IN  MX  1  mx1    ; or mx1.example.org.
-;  3600  IN  MX  2  mx2
+@    IN  A  127.0.0.1
+*    IN  A  127.0.0.1
 
 ; redirect subdomains to other servers
 ;test        IN  A  10.11.12.13
 
-; redirecting by CNAME (for example to github pages)
-;www         IN  CNAME  example1.github.io.
-;info        IN  CNAME  example2.github.io.
-
-
-;;;;;;;;;;  configuration related to google hosted domains ;;;;;;;;;;
-
+; mailservers
+;  3600  IN  MX  1  mx1    ; or mx1.example.org.
 ;$INCLUDE conf/google.mx
-;$INCLUDE conf/googlehosted
+
 
 ; verify domain ownership by TXT
 ;  IN  TXT  "google-site-verification=6ZDrCOHwyPhtoNjRH2bFZtgd7lCl1K5YcyPjCvofNp0"
@@ -45,4 +38,11 @@ $INCLUDE conf/common-domains.a
 ;   "A4QbnnocPXntCWtRkwIDAQAB")
 
 ; google._domainkey  IN  TXT  "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWKzwJ1kui8IVQmTbphXvPETTJWbqOyDqbkppfBrcos1+gIixvMEMYSVUrawpzyaaxEPg3IT/Wq8MF3S58/cUtwv3Idv6IkQxIU6ub8BuEq900ILD9EuQX32jUk+pfpJtDoeA0vm1vhv1taIGr4W5ds2HXyQXX1qKcyShRAC2O/wIDAQAB"
+
+
+;$INCLUDE conf/googlehosted
+
+; redirecting by CNAME (for example to github pages)
+;www         IN  CNAME  example1.github.io.
+;info        IN  CNAME  example2.github.io.
 

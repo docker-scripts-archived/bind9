@@ -21,11 +21,12 @@ done <<< "$AXFR_SERVERS"
 ufw enable
 
 ### fix config files
-sed -i /etc/bind/conf/common-domains.a \
+sed -i /etc/bind/zone/example.org.db \
     -e "s/127\.0\.0\.1/$PUBLIC_IP/"
 
 cat <<_EOF > /etc/bind/conf/allow-transfer
-allow-transfer {$AXFR_SERVERS};
+allow-transfer {
+    127.0.0.1;  # for debugging $AXFR_SERVERS};
 _EOF
 
 cat <<_EOF > /etc/bind/conf/also-notify
