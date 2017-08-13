@@ -28,3 +28,12 @@ See also this: [docs/how-to-manage-your-own-name-server.org](https://github.com/
     zone (add | rm | en | dis) <domain>
         Manage domain zones.
 
+## Troubeshooting
+
+    cd /var/ds/bind9/
+    ds shell
+    service bind9 restart
+    service bind9 status
+    tail -n 100 /var/log/syslog
+    dig example.org axfr @127.0.0.1
+    ufw status
