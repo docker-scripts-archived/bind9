@@ -13,5 +13,5 @@ cmd_create() {
     # NET_ADMIN needed for iptables
     orig_cmd_create \
         --cap-add=NET_ADMIN \
-        -v $(pwd)/etc-bind:/etc/bind
+        --mount type=bind,source=$(pwd)/etc-bind,destination=/etc/bind
 }
