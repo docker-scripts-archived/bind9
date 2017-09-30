@@ -7,7 +7,7 @@ _EOF
 }
 
 cmd_config() {
-    ds runcfg set_prompt
-    ds runcfg ssmtp
-    ds runcfg bind9
+    ds inject set_prompt.sh
+    ds inject ssmtp.sh
+    ds inject bind9.sh
 }
