@@ -12,7 +12,6 @@ sed -i /etc/default/ufw \
     -e 's/^IPT_MODULES=/#IPT_MODULES=/'
 
 ### add ufw rules for allowing axfr servers
-local server_ip
 while read line; do
     [[ -z $line ]] && continue
     server_ip=$(echo $line | cut -d';' -f1)
