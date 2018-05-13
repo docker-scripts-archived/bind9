@@ -62,7 +62,7 @@ you have some basic command-line skills.
 
   Install *bind9*:
   #+BEGIN_EXAMPLE
-  apt-get install bind9
+  apt install bind9
   #+END_EXAMPLE
 
   After installation, edit ~/etc/default/bind9~ and add a *-4* to the
